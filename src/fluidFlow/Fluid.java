@@ -3,6 +3,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 
 public class Fluid {
+
     private int N;
 	private int SCALE;
 	private int iter = 1;
@@ -10,8 +11,11 @@ public class Fluid {
 	private float dt;
 	private float[] s;
 	private float visc, diff;
+
 	private float r=0, gr=0, b=0;
 	private float r1=0, g1=0, b1=0;
+
+	// Fluid constructor
 	public Fluid(int N, int SCALE, float dt, float visc, float diff) {
 		this.N = N/SCALE;
 		this.SCALE = SCALE;
@@ -51,6 +55,8 @@ public class Fluid {
 	    diffuse(0, s, density, diff, dt);
 	    advect(0, density, s, Vx, Vy, dt);
 	}
+
+	// diffuse velocities
 	public void diffuse(int b, float[] x, float[] x0, float diff, float dt) {
 		float a = dt * diff * (N-2)*(N-2);
 		for(int k = 0;k<iter;k++) {
@@ -63,6 +69,7 @@ public class Fluid {
 			setBnd(b, x);
 		}
 	}
+	// advect velocities
 	public void advect(int b, float[] d, float[] d0, float[] Vx, float[] Vy, float dt) {
 		int i, j, i0, j0, i1, j1;
 		float x, y, s0, t0, s1, t1, dt0;
@@ -89,35 +96,7 @@ public class Fluid {
 		}
 		setBnd (b, d);
 	}
-	public void advectdeleteme(int b, float[] d, float[] d0, float[] Vx, float[] Vy, int[][] colors, int[][] colors0, float dt) {
-		int i, j, trueXindex, trueYindex, trueXindexP1, trueYindexP1;
-		float trueX, trueY, trueXdeciPtSubFrom1, trueYdeciPtSubFrom1, trueXdeciPt, trueYdeciPt, pixToCoverInTstep;
-		pixToCoverInTstep = dt*N;
-		for ( i=1 ; i<=N ; i++ ) {
-			for ( j=1 ; j<=N ; j++ ) {
-				trueX = i-pixToCoverInTstep*Vx[IX(i,j)]; 
-				trueY = j-pixToCoverInTstep*Vy[IX(i,j)];
-				if (trueX<0.5) trueX=0.5f; //trueX must be .5 or higher
-				if (trueX>N+0.5) trueX=N+ 0.5f; //trueX must be N+.5 or lower
-				trueXindex=(int)trueX; 
-				trueXindexP1=trueXindex+1;
-				if (trueY<0.5) trueY=0.5f; //trueY must be .5 or higher
-				if (trueY>N+0.5) trueY=N+ 0.5f; //trueY must be N+.5 or lower
-				trueYindex=(int)trueY; 
-				trueYindexP1=trueYindex+1;
-				trueXdeciPt = trueX-trueXindex; 
-				trueXdeciPtSubFrom1 = 1-trueXdeciPt; 
-				trueYdeciPt = trueY-trueYindex; 
-				trueYdeciPtSubFrom1 = 1-trueYdeciPt;
-				
-				d[IX(i,j)] = 
-						trueXdeciPtSubFrom1*(trueYdeciPtSubFrom1*d0[IX(trueXindex,trueYindex)]+trueYdeciPt*d0[IX(trueXindex,trueYindexP1)])+
-						trueXdeciPt*(trueYdeciPtSubFrom1*d0[IX(trueXindexP1,trueYindex)]+trueYdeciPt*d0[IX(trueXindexP1,trueYindexP1)]);
-
-			}
-		}
-		setBnd (b, d);
-	}
+	// project velocities
 	public void project(float[] Vx, float[] Vy, float[] p, float[] div) {
 		int i, j, k;
 		float h;
@@ -150,8 +129,8 @@ public class Fluid {
 		setBnd (2, Vy);
 
 	}
+	// set the walls so the fluid reacts when hitting a wall
 	public void setBnd(int b, float[] x) {
-
 	    for(int k = 1; k < N - 1; k++) {
 	        for(int i = 1; i < N - 1; i++) {
 	            x[IX(i, 0  )] = b == 2 ? -x[IX(i, 1  )] : x[IX(i, 1  )];
@@ -169,7 +148,7 @@ public class Fluid {
 	    x[IX(N-1, 0)] = 0.5f * (x[IX(N-2, 0)] + x[IX(N-1, 1)]);
 	    x[IX(N-1, N-1)] = 0.5f * (x[IX(N-2, N-1)] + x[IX(N-1, N-2)]);
 	}
-	
+	// add dye to velocities so you can see the fluid in motion
 	public void addDye(int x, int y, float amt) {
 		int num = 3;
 		for(int i = x-num;i<=x+num;i++) {
@@ -182,6 +161,7 @@ public class Fluid {
 			}
 		}
 	}
+	// addVelocity changes a velocity for a given xy coordinate
 	public void addVelocity(int x, int y, float amtX, float amtY) {
 		int num = 3;
 		for(int i = x-num;i<=x+num;i++) {
@@ -199,6 +179,7 @@ public class Fluid {
 			}
 		}
 	}
+	// draws the dye based on the density of the dye
 	public void drawDens(Graphics g) {
 		r+=r1;
 		gr+=g1;
@@ -228,7 +209,7 @@ public class Fluid {
 		}
 		
 	}
-	int yeet = 0;
+	// this function is not being used but will draw the velocities
 	public void drawVel(Graphics g) {
 		for(int i = 0;i<this.N;i++) {
 			for(int j = 0;j<this.N;j++) {
@@ -241,6 +222,7 @@ public class Fluid {
 			}
 		}
 	}
+	// converts xy coordinates to a linear 1d array index
 	public int IX(int x, int y) {
 		if(x+this.N*y>(1256*this.N)/10) {
 			return (x+this.N*y)/((1256*this.N)/10);
